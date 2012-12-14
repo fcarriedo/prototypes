@@ -1,6 +1,11 @@
+
+// Event bus
+eventBus = {};
+_.extend(eventBus, Backbone.Events);
+
 // Models
 Product = Backbone.Model.extend({});
-Page = Backbone.Model.extend({});
+Page = Backbone.Model.extend({defaults: function() {active: false}});
 Bullet = Backbone.Model.extend({});
 
 // Collections
@@ -16,6 +21,15 @@ ProductListView = Backbone.View.extend({
     this.$bulletContainer = $('#bullet-container').hide();
     this.totalPages = Math.ceil(this.collection.length/this.collection.prodsPerPage);
     if(this.totalPages > 1) this.$bulletContainer.show(); // Only show when there is more than one page
+
+    // Pages array
+    this.pages = [];
+    eventBus.on('pageActivated', this.onPageActivated, this);
+  },
+  onPageActivated: function(pgId) {
+    _.each(this.pages, function(page) {
+      if(page.id != pgId) page.set('active', false);
+    });
   },
   render: function() {
     // Create the pages
@@ -25,10 +39,11 @@ ProductListView = Backbone.View.extend({
       var pageView = new PageView({model: page});
       var bulletView = new BulletView({model: page});
 
-      pageViews.push(pageView);
-
       this.$el.append(pageView.render().el);
       this.$bulletContainer.append(bulletView.render().el);
+
+      pageViews.push(pageView);
+      this.pages.push(page);
     }
 
     // Fill them with products
@@ -38,6 +53,9 @@ ProductListView = Backbone.View.extend({
       pageViews[pgIx].$el.append(new ProductView({model: prod}).render().el);
     }, this);
 
+    // Set the first page as active
+    if(this.pages) this.pages[0].set('active', true);
+
     return this;
   },
 });
@@ -45,6 +63,9 @@ PageView = Backbone.View.extend({
   className: 'page',
   hovered: false,
   hoverDelay: 350,
+  initialize: function() {
+    this.listenTo(this.model, 'change:active', this.onActiveChange);
+  },
   render: function() {
     this.$el.attr('id', 'page-' + this.model.id);
     var self = this;
@@ -57,7 +78,7 @@ PageView = Backbone.View.extend({
         self.hovered = true;
         setTimeout(function() {
           if(self.hovered) {
-            self.slideTo();
+            self.setActive();
           }
         }, self.hoverDelay);
       },
@@ -73,18 +94,19 @@ PageView = Backbone.View.extend({
     });
     return this;
   },
-  slideTo: function() {
-    // Accomodate page classes to represent active
-    $('.page').removeClass('active');
-    var pageId = '#page-' + this.model.get('id');
-    $(pageId).addClass('active');
-
-    // Accomodate bullet classes to represent selected
-    $('.bullet').removeClass('selected');
-    //this.$el.addClass('selected');
-
-    // Perform the actual slide
-    $('#page-viewport').scrollTo(pageId, 250, {over: -0.12});
+  setActive: function() {
+    this.model.set('active', true);
+    // Trigger the pageActivated event
+    eventBus.trigger('pageActivated', this.model.id);
+  },
+  onActiveChange: function() {
+    if(this.model.get('active')) {
+      this.$el.addClass('active');
+      // Perform the actual slide
+      $('#page-viewport').scrollTo('#'+this.$el.attr('id'), 250, {over: -0.12});
+    } else {
+      this.$el.removeClass('active');
+    }
   }
 });
 ProductView = Backbone.View.extend({
@@ -99,13 +121,14 @@ BulletView = Backbone.View.extend({
   hovered: false,
   hoverDelay: 700,
   events: {
-    'click'      : 'slideTo'
+    'click' : 'setPageActive'
   },
   initialize: function() {
     this.page = this.model;
+    this.listenTo(this.page, 'change:active', this.onActiveChange);
   },
   render: function() {
-    this.$el.attr('title', 'Page ' + this.page.get('id'));
+    this.$el.attr('title', 'Page ' + (parseInt(this.page.get('id'))+1));
     var self = this;
     this.$el.droppable({
       accept: '.product',
@@ -129,7 +152,7 @@ BulletView = Backbone.View.extend({
     setTimeout(function() {
       if(self.hovered) {
         self.$el.addClass('sliding');
-        self.slideTo();
+        self.setPageActive();
       }
     }, this.hoverDelay);
   },
@@ -137,17 +160,16 @@ BulletView = Backbone.View.extend({
     this.$el.removeClass('active sliding');
     this.hovered = false;
   },
-  slideTo: function() {
-    // Accomodate page classes to represent active
-    $('.page').removeClass('active');
-    var pageId = '#page-' + this.page.get('id');
-    $(pageId).addClass('active');
-
-    // Accomodate bullet classes to represent selected
-    $('.bullet').removeClass('selected');
-    this.$el.addClass('selected');
-
-    // Perform the actual slide
-    $('#page-viewport').scrollTo(pageId, 350, {over: -0.12});
+  setPageActive: function(evt) {
+    this.page.set('active', true);
+    // Trigger the pageActivated event
+    eventBus.trigger('pageActivated', this.page.id);
+  },
+  onActiveChange: function() {
+    if(this.page.get('active')) {
+      this.$el.addClass('selected');
+    } else {
+      this.$el.removeClass('selected');
+    }
   }
 });
