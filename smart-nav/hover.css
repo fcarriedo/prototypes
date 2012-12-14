@@ -54,8 +54,8 @@ body { font-family: Verdana }
   cursor: pointer;
 }
 .selected {
-  border-width: 2px;
-  background-color: lightyellow;
+  border-color: #3399FF;
+  background-color: #6699FF;
 }
 #bullet-container > .active {background-color: #aaa; border-color: #ccc; cursor: pointer;}
-#bullet-container > .sliding {border-width: 2px; background-color: orange;}
+#bullet-container > .sliding {border: thin dashed orange; background-color: lightyellow;}

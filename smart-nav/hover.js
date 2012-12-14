@@ -44,7 +44,15 @@ ProductListView = Backbone.View.extend({
 PageView = Backbone.View.extend({
   className: 'page',
   render: function() {
-    this.$el.sortable({revert: true});
+    this.$el.sortable({
+      connectWith: '.page',
+      items: '.product',
+      tolerance: 'pointer',
+      revert: true,
+      receive: function(evt, ui) {
+        console.log('received from: ' + ui.sender.attr('id'));
+      }
+    });
     this.$el.attr('id', 'page-' + this.model.id);
     return this;
   }
@@ -53,18 +61,6 @@ ProductView = Backbone.View.extend({
   className: 'product',
   render: function() {
     this.$el.html('<span class="product-info">sku: ' + this.model.get('sku') + '</span>');
-    var self = this;
-    this.$el.draggable({
-      connectToSortable: '.page',
-      cursor: 'move',
-      addClasses: false,
-      revert: 'invalid',
-      helper: function(evt) {
-        self.$el.data('startPosition', $(this).position());
-        return self.$el.data('model', self.model);
-      }
-    });
-
     return this;
   }
 });
@@ -91,9 +87,8 @@ BulletView = Backbone.View.extend({
         self.dragHoverOff();
       },
       drop: function(evt, ui) {
-        console.log($(ui.helper).data('model').get('sku'));
-        $(ui.helper).animate($(ui.helper).data('startPosition'), 500);
-        self.dragHoverOff();
+        self.$el.removeClass('active');
+        self.$el.removeClass('sliding');
       }
     });
     return this;
