@@ -11,7 +11,7 @@ body { font-family: Verdana }
   width: 250px;
   height: 187px;
   background-color: white;
-  border: thin solid #999;
+  border: thin solid #ccc;
   margin: 10px auto;
 }
 .page:first-child {margin-top: 20px}
