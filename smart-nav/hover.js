@@ -43,24 +43,48 @@ ProductListView = Backbone.View.extend({
 });
 PageView = Backbone.View.extend({
   className: 'page',
+  hovered: false,
+  hoverDelay: 350,
   render: function() {
     this.$el.attr('id', 'page-' + this.model.id);
+    var self = this;
     this.$el.sortable({
       connectWith: '.page',
       items: '.product',
       tolerance: 'pointer',
       revert: true,
       over: function(evt, ui) {
-        console.log('Over another connected...');
+        self.hovered = true;
+        setTimeout(function() {
+          if(self.hovered) {
+            self.slideTo();
+          }
+        }, self.hoverDelay);
+      },
+      out: function(evt, ui) {
+        self.hovered = false;
       },
       update: function(evt, ui) {
-        console.log('updated...');
+        //console.log('updated...');
       },
       receive: function(evt, ui) {
         console.log('received from: ' + ui.sender.attr('id'));
       }
     });
     return this;
+  },
+  slideTo: function() {
+    // Accomodate page classes to represent active
+    $('.page').removeClass('active');
+    var pageId = '#page-' + this.model.get('id');
+    $(pageId).addClass('active');
+
+    // Accomodate bullet classes to represent selected
+    $('.bullet').removeClass('selected');
+    //this.$el.addClass('selected');
+
+    // Perform the actual slide
+    $('#page-viewport').scrollTo(pageId, 250, {over: -0.12});
   }
 });
 ProductView = Backbone.View.extend({
@@ -73,7 +97,7 @@ ProductView = Backbone.View.extend({
 BulletView = Backbone.View.extend({
   className: 'bullet',
   hovered: false,
-  hoverDelay: 1000,
+  hoverDelay: 700,
   events: {
     'click'      : 'slideTo'
   },
