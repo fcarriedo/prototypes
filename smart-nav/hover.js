@@ -25,6 +25,9 @@ PageView = Backbone.View.extend({
   className: 'page',
   hovered: false,
   hoverDelay: 350,
+  events: {
+    'click' : 'setActive'
+  },
   initialize: function() {
     this.listenTo(this.model, 'change:active', this.onActiveChange);
 
@@ -62,11 +65,12 @@ PageView = Backbone.View.extend({
   },
   setActive: function() {
     this.model.set('active', true);
-    // Trigger the pageActivated event
-    eventBus.trigger('pageActivated', this.model.id);
   },
   onActiveChange: function() {
     if(this.model.get('active')) {
+      // Trigger the pageActivated event
+      eventBus.trigger('pageActivated', this.model.id);
+
       this.$el.addClass('active');
       // Perform the actual slide
       $('#page-viewport').scrollTo('#'+this.$el.attr('id'), 250, {over: -0.12});
@@ -162,8 +166,6 @@ BulletView = Backbone.View.extend({
   },
   setPageActive: function(evt) {
     this.page.set('active', true);
-    // Trigger the pageActivated event
-    eventBus.trigger('pageActivated', this.page.id);
   },
   onActiveChange: function() {
     if(this.page.get('active')) {
@@ -189,7 +191,7 @@ LayoutDisplayView = Backbone.View.extend({
       var prodsList = new ProductList().reset(prods);
 
       // Create all the pages and add them to the page list
-      var page = new Page({id: pgIx});
+      var page = new Page({id: pgIx, layout: layout});
       page.products = prodsList;
       pageList.add(page);
     }
