@@ -88,7 +88,7 @@ PageListView = Backbone.View.extend({
     eventBus.on('pageActivated', this.onPageActivated, this);
 
     // Listeners
-    this.listenTo(this.collection, 'add', this.showHideBullets);
+    this.listenTo(this.collection, 'add,remove', this.showHideBullets);
   },
   onPageActivated: function(pgId) {
     this.collection.each(function(page) {
