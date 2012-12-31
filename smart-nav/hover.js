@@ -85,10 +85,10 @@ PageListView = Backbone.View.extend({
     this.$bulletContainer = $('#bullet-container');
     this.showHideBullets();
 
-    eventBus.on('pageActivated', this.onPageActivated, this);
-
     // Listeners
-    this.listenTo(this.collection, 'add,remove', this.showHideBullets);
+    this.listenTo(this.collection, 'add remove', this.showHideBullets);
+    // Listening for the event bus 'pageActivated' event
+    eventBus.on('pageActivated', this.onPageActivated, this);
   },
   onPageActivated: function(pgId) {
     this.collection.each(function(page) {
@@ -100,15 +100,14 @@ PageListView = Backbone.View.extend({
   },
   render: function() {
     this.collection.each(function(page) {
-      var pageView = new PageView({model: page});
-      var bulletView = new BulletView({model: page});
-
-      this.$el.append(pageView.render().el);
-      this.$bulletContainer.append(bulletView.render().el);
+      this.$el.append(new PageView({model: page}).render().el);
+      this.$bulletContainer.append(new BulletView({model: page}).render().el);
     }, this);
 
-    // Set the first page as active
-    this.collection.get(0).set('active', true);
+    // Set the first page as active if none active pages exist
+    if(this.collection.every(function(page) { return page.get('active') === false})) {
+      this.collection.get(0).set('active', true);
+    }
 
     return this;
   },
