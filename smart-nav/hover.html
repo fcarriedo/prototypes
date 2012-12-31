@@ -8,14 +8,14 @@
     <script>
       $(document).ready(function() {
         var prods = new ProductList([{sku: '1a'},{sku: '2b'},{sku: '3c'},{sku: '4d'},{sku: '5e'},{sku: '6f'}]);
-        new ProductListView({collection: prods}).render();
+        new LayoutDisplayView({collection: prods});
       });
     </script>
   </head>
   <body>
     <h3>Drag-Hover-Slide-Drop demo</h3>
     <div id='page-viewport'></div>
-    <div id='bullet-container' style='display: none;'></div>
+    <div id='bullet-container' style='display: none'></div>
 
     <script type='text/javascript' src='underscore-min.js'></script>
     <script type='text/javascript' src='backbone-min.js'></script>
