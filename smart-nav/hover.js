@@ -32,6 +32,7 @@ PageView = Backbone.View.extend({
     this.listenTo(this.model, 'change:active', this.onActiveChange);
 
     this.$el.attr('id', 'page-' + this.model.id);
+    this.$el.data('model', this.model);
     var self = this;
     this.$el.sortable({
       connectWith: '.page',
@@ -50,12 +51,20 @@ PageView = Backbone.View.extend({
         self.hovered = false;
       },
       update: function(evt, ui) {
-        console.log('Item: ' + ui.item.attr('id'));
-        if(ui.sender) console.log('Sender: ' + ui.sender.attr('id'));
+        console.log('this page: ' + self.model.id);
+        if(ui.sender) {
+          var srcPage = ui.sender.data('model');
+          console.log('source page: ' + srcPage.id);
+          if(srcPage.id < self.model.id) {
+            console.log('Came from a previous page. Should take the first one and append it to the source page.');
+          } else {
+            console.log('Came from a further page. Should take the last one and preppend it to the source page.');
+          }
+        }
+
+        //console.log('Item: ' + ui.item.attr('id') + ', from page : ' + self.model.id);
+        //if(ui.sender) console.log('Sender: ' + ui.sender.attr('id'));
         //self.$el.find('.product').each(function(ix) {console.log('-- ' + $(this).attr('id'))});
-      },
-      receive: function(evt, ui) {
-        console.log('received from: ' + ui.sender.attr('id'));
       }
     });
 
@@ -130,7 +139,8 @@ PageListView = Backbone.View.extend({
 ProductView = Backbone.View.extend({
   className: 'product',
   initialize: function() {
-    this.$el.attr('id', this.model.get('sku'));
+    this.$el.attr('id', 'sku-' + this.model.get('sku'));
+    this.$el.data('model', this.model);
   },
   render: function() {
     this.$el.html('<span class="product-info">sku: ' + this.model.get('sku') + '</span>');
