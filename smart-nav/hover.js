@@ -50,17 +50,25 @@ PageView = Backbone.View.extend({
         self.hovered = false;
       },
       update: function(evt, ui) {
-        //console.log('updated...');
+        console.log('Item: ' + ui.item.attr('id'));
+        if(ui.sender) console.log('Sender: ' + ui.sender.attr('id'));
+        //self.$el.find('.product').each(function(ix) {console.log('-- ' + $(this).attr('id'))});
       },
       receive: function(evt, ui) {
         console.log('received from: ' + ui.sender.attr('id'));
       }
     });
+
+    // Create all the product views
+    this.productViews = [];
+    this.model.products.each(function(prod) {
+      this.productViews.push(new ProductView({model: prod}));
+    }, this);
   },
   render: function() {
-    this.model.products.each(function(prod) {
-      this.$el.append(new ProductView({model: prod}).render().el);
-    }, this);
+    for(var i=0; i<this.productViews.length; i++) {
+      this.$el.append(this.productViews[i].render().el);
+    }
     return this;
   },
   setActive: function() {
@@ -89,6 +97,13 @@ PageListView = Backbone.View.extend({
     this.listenTo(this.collection, 'add remove', this.showHideBullets);
     // Listening for the event bus 'pageActivated' event
     eventBus.on('pageActivated', this.onPageActivated, this);
+
+    this.pageViews = [];
+    this.bulletViews = [];
+    this.collection.each(function(page) {
+      this.pageViews.push(new PageView({model: page}));
+      this.bulletViews.push(new BulletView({model: page}));
+    }, this);
   },
   onPageActivated: function(pgId) {
     this.collection.each(function(page) {
@@ -99,10 +114,10 @@ PageListView = Backbone.View.extend({
     this.$bulletContainer.toggle(this.collection.length > 1);
   },
   render: function() {
-    this.collection.each(function(page) {
-      this.$el.append(new PageView({model: page}).render().el);
-      this.$bulletContainer.append(new BulletView({model: page}).render().el);
-    }, this);
+    for(var i=0; i<this.pageViews.length; i++) {
+      this.$el.append(this.pageViews[i].render().el);
+      this.$bulletContainer.append(this.bulletViews[i].render().el);
+    }
 
     // Set the first page as active if none active pages exist
     if(this.collection.every(function(page) { return page.get('active') === false})) {
@@ -114,6 +129,9 @@ PageListView = Backbone.View.extend({
 });
 ProductView = Backbone.View.extend({
   className: 'product',
+  initialize: function() {
+    this.$el.attr('id', this.model.get('sku'));
+  },
   render: function() {
     this.$el.html('<span class="product-info">sku: ' + this.model.get('sku') + '</span>');
     return this;
