@@ -31,6 +31,9 @@ PageView = Backbone.View.extend({
   initialize: function() {
     this.listenTo(this.model, 'change:active', this.onActiveChange);
 
+    // TODO: Check if we can minimize renders later
+    this.model.products.on('add remove reset', this.render, this);
+
     this.$el.attr('id', 'page-' + this.model.id);
     this.$el.data('model', this.model);
     var self = this;
@@ -51,33 +54,33 @@ PageView = Backbone.View.extend({
         self.hovered = false;
       },
       update: function(evt, ui) {
-        console.log('this page: ' + self.model.id);
+        // We check the prods that exist on the current page and update it (reset).
+        var prodsTmp = [];
+        self.$el.find('.product').each(function(ix) {
+          prodsTmp.push( $(this).data('model') );
+        });
+        self.model.products.reset(prodsTmp);
+
         if(ui.sender) {
           var srcPage = ui.sender.data('model');
-          console.log('source page: ' + srcPage.id);
           if(srcPage.id < self.model.id) {
-            console.log('Came from a previous page. Should take the first one and append it to the source page.');
+            // Came from a previous page. Should take the first one and append it to the source page.
+            var shiftProd = self.model.products.shift();
+            srcPage.products.push(shiftProd);
           } else {
-            console.log('Came from a further page. Should take the last one and preppend it to the source page.');
+            // Came from a further page. Should take the last one and preppend it to the source page.
+            var popProd = self.model.products.pop();
+            srcPage.products.unshift(popProd);
           }
         }
-
-        //console.log('Item: ' + ui.item.attr('id') + ', from page : ' + self.model.id);
-        //if(ui.sender) console.log('Sender: ' + ui.sender.attr('id'));
-        //self.$el.find('.product').each(function(ix) {console.log('-- ' + $(this).attr('id'))});
       }
     });
-
-    // Create all the product views
-    this.productViews = [];
-    this.model.products.each(function(prod) {
-      this.productViews.push(new ProductView({model: prod}));
-    }, this);
   },
   render: function() {
-    for(var i=0; i<this.productViews.length; i++) {
-      this.$el.append(this.productViews[i].render().el);
-    }
+    this.$el.html('');
+    this.model.products.each(function(prod) {
+      this.$el.append(new ProductView({model: prod}).render().el);
+    }, this);
     return this;
   },
   setActive: function() {
