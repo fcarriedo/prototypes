@@ -13,7 +13,7 @@ Page = Backbone.Model.extend({
 });
 Bullet = Backbone.Model.extend({});
 Layout = Backbone.Model.extend({
-  defaults: function() { return{ layoutId: 'default', prodsPerPage: 2} },
+  defaults: function() { return{ id: 'default', prodsPerPage: 2} },
 });
 
 // Collections
@@ -33,6 +33,8 @@ PageView = Backbone.View.extend({
 
     // TODO: Check if we can minimize renders later
     this.model.products.on('add remove reset', this.render, this);
+
+    this.model.on('change:layout', this.render, this);
 
     this.$el.attr('id', 'page-' + this.model.id);
     this.$el.data('model', this.model);
@@ -78,8 +80,15 @@ PageView = Backbone.View.extend({
   },
   render: function() {
     this.$el.html('');
+
+    var layout = this.model.get('layout');
+    var layoutTmpl = $('#' + layout.id).clone();
+
+    this.$el.html(layoutTmpl.html());
+    var $prodContainer = this.$el.find('.prod-container-' + layout.id);
+
     this.model.products.each(function(prod) {
-      this.$el.append(new ProductView({model: prod}).render().el);
+      $prodContainer.append(new ProductView({model: prod}).render().el);
     }, this);
     return this;
   },
@@ -207,8 +216,8 @@ BulletView = Backbone.View.extend({
 });
 LayoutDisplayView = Backbone.View.extend({
   initialize: function(options) {
-    var layout = new Layout();
-    var prodsPerPage = parseInt(layout.get('prodsPerPage'));
+    var layout = new Layout({id: 'hero-top', prodsPerPage: 2});
+    var prodsPerPage = layout.get('prodsPerPage');
     var totalPages = Math.ceil(this.collection.length/prodsPerPage);
 
     var pageList = new PageList();
@@ -225,7 +234,7 @@ LayoutDisplayView = Backbone.View.extend({
       page.products = prodsList;
       pageList.add(page);
     }
-    new PageListView({collection: pageList, layout: layout}).render();
+    new PageListView({collection: pageList}).render();
   }
 });
 

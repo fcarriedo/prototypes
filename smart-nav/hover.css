@@ -21,7 +21,6 @@ body { font-family: Verdana }
 .product {
   width: 100px;
   height: 75px;
-  margin: 10px 0px 0px 15px;
   float: left;
   border: thin dashed #999;
 }
@@ -59,3 +58,52 @@ body { font-family: Verdana }
 }
 #bullet-container > .active {background-color: #aaa; border-color: #ccc; cursor: pointer;}
 #bullet-container > .sliding {border: thin dashed orange; background-color: lightyellow;}
+
+
+/* Template related */
+[class^='ad-'] {
+  border: thin solid red;
+  margin: 10px 0px 0px 15px;
+}
+[class^='prod-container-'] {
+  margin: 10px 0px 0px 15px;
+}
+
+/* Default layout styling */
+.prod-container-default {
+  margin: 0px;
+}
+.prod-container-default .product {
+  margin: 10px 0px 0px 15px;
+}
+
+/* Hero Top/Bottom layout styling */
+.ad-hero-top, .ad-hero-bottom {
+  width: 217px;
+  height: 75px;
+}
+.prod-container-hero-top, .prod-container-hero-bottom {
+  width: 217px;
+  height: 75px;
+}
+.prod-container-hero-top > .product, .prod-container-hero-bottom > .product {
+  margin: 0px 13px 0px 0px;
+}
+.prod-container-hero-top > .product:last-child, .prod-container-hero-bottom > .product:last-child {
+  margin: 0px;
+}
+
+/* Hero Right/Left layout styling */
+.ad-hero-right, .ad-hero-left {
+  float: left;
+  width: 100px;
+  height: 161px;
+}
+.prod-container-hero-right, .prod-container-hero-left {
+  float: left;
+  width: 100px;
+  height: 161px;
+}
+.prod-container-hero-right > .product, .prod-container-hero-left > .product {
+  margin: 0px 0px 10px 0px;
+}
