@@ -8,14 +8,18 @@
     <script>
       $(document).ready(function() {
         var prods = new ProductList([{id: '1a', sku: '1a'},{id: '2b', sku: '2b'},{id: '3c', sku: '3c'},{id: '4d', sku: '4d'},{id: '5e', sku: '5e'},{id: '6f', sku: '6f'}]);
-        new LayoutDisplayView({collection: prods});
+        var layoutDisplayView = new LayoutDisplayView({collection: prods, layout: new Layout({id: 'hero-top', prodsPerPage: 2})});
+        layoutDisplayView.render();
       });
     </script>
   </head>
   <body>
     <h3>Drag-Hover-Slide-Drop demo</h3>
-    <div id='page-viewport'></div>
-    <div id='bullet-container' style='display: none'></div>
+    <div id='app'>
+      <div id='page-viewport'></div>
+      <div id='bullet-container' style='display: none'></div>
+      <div id='layout-toolbar'></div>
+    </div>
 
     <script type='text/javascript' src='underscore-min.js'></script>
     <script type='text/javascript' src='backbone-min.js'></script>

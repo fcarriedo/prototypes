@@ -6,14 +6,14 @@ _.extend(eventBus, Backbone.Events);
 // Models
 Product = Backbone.Model.extend({});
 Page = Backbone.Model.extend({
-  defaults: function() { return{ active: false, maxProducts: 2} },
+  defaults: function() { return{active: false} },
   initialize: function(){
     this.products = this.nestCollection(this, 'products', new ProductList(this.get('products')));
   }
 });
 Bullet = Backbone.Model.extend({});
 Layout = Backbone.Model.extend({
-  defaults: function() { return{ id: 'default', prodsPerPage: 2} },
+  defaults: function() { return{ id: 'default', prodsPerPage: 4} },
 });
 
 // Collections
@@ -114,6 +114,10 @@ PageListView = Backbone.View.extend({
     this.$bulletContainer = $('#bullet-container');
     this.showHideBullets();
 
+    // Clean them up
+    this.$el.html('');
+    this.$bulletContainer.html('');
+
     // Listeners
     this.listenTo(this.collection, 'add remove', this.showHideBullets);
     // Listening for the event bus 'pageActivated' event
@@ -136,8 +140,8 @@ PageListView = Backbone.View.extend({
   },
   render: function() {
     for(var i=0; i<this.pageViews.length; i++) {
-      this.$el.append(this.pageViews[i].render().el);
-      this.$bulletContainer.append(this.bulletViews[i].render().el);
+      this.$el.append(this.pageViews[i].render().$el.fadeIn());
+      this.$bulletContainer.append(this.bulletViews[i].render().$el.fadeIn());
     }
 
     // Set the first page as active if none active pages exist
@@ -215,9 +219,27 @@ BulletView = Backbone.View.extend({
   }
 });
 LayoutDisplayView = Backbone.View.extend({
-  initialize: function(options) {
-    var layout = new Layout({id: 'hero-top', prodsPerPage: 2});
-    var prodsPerPage = layout.get('prodsPerPage');
+  el: $('#app'),
+  initialize: function(opts) {
+    var $layoutToolbar = this.$('#layout-toolbar');
+    // Fill the layout chooser
+    var allLayouts = [];
+    allLayouts.push( new Layout({id: 'default', prodsPerPage: 4}) );
+    allLayouts.push( new Layout({id: 'hero-top', prodsPerPage: 2}) );
+    allLayouts.push( new Layout({id: 'hero-bottom', prodsPerPage: 2}) );
+    allLayouts.push( new Layout({id: 'hero-left', prodsPerPage: 2}) );
+    allLayouts.push( new Layout({id: 'hero-right', prodsPerPage: 2}) );
+
+    for(ix in allLayouts) {
+      $layoutToolbar.append(new LayoutIconView({model: allLayouts[ix]}).render().el);
+    }
+
+    eventBus.on('layoutChanged', this.updateLayout, this);
+
+    this.layout = opts.layout ? opts.layout : new Layout();
+  },
+  render: function() {
+    var prodsPerPage = this.layout.get('prodsPerPage');
     var totalPages = Math.ceil(this.collection.length/prodsPerPage);
 
     var pageList = new PageList();
@@ -230,11 +252,31 @@ LayoutDisplayView = Backbone.View.extend({
       var prodsList = new ProductList().reset(prods);
 
       // Create all the pages and add them to the page list
-      var page = new Page({id: pgIx, layout: layout});
+      var page = new Page({id: pgIx, layout: this.layout});
       page.products = prodsList;
       pageList.add(page);
     }
     new PageListView({collection: pageList}).render();
+  },
+  updateLayout: function(newLayout) {
+    console.log('Updating layout to: ' + newLayout.id);
+    this.layout = newLayout;
+    this.render();
+  }
+});
+LayoutIconView = Backbone.View.extend({
+  className: 'layout-icon',
+  events: {
+    'click' : 'applyLayout'
+  },
+  initialize: function() {
+    this.$el.attr('title', this.model.id);
+  },
+  render: function() {
+    return this;
+  },
+  applyLayout: function() {
+    eventBus.trigger('layoutChanged', this.model);
   }
 });
 

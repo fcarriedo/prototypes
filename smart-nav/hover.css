@@ -34,8 +34,6 @@ body { font-family: Verdana }
   height: 225px;
   float: left;
   margin-left: 10px;
-  display: table-cell;
-  vertical-align: middle;
 }
 .bullet {
   border: solid thin #999;
@@ -58,6 +56,18 @@ body { font-family: Verdana }
 }
 #bullet-container > .active {background-color: #aaa; border-color: #ccc; cursor: pointer;}
 #bullet-container > .sliding {border: thin dashed orange; background-color: lightyellow;}
+
+#layout-toolbar {
+  height: 225px;
+  float: left;
+  margin-left: 30px;
+}
+.layout-icon {
+  width: 15px;
+  height: 15px;
+  border: thin solid orange;
+  margin-bottom: 5px;
+}
 
 
 /* Template related */
