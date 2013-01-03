@@ -7,8 +7,19 @@
     <script type='text/javascript' src='jquery.scrollTo.js'></script>
     <script>
       $(document).ready(function() {
+        // All the available layouts
+        var layouts = new LayoutList([
+          {id: 'default', prodsPerPage: 4},
+          {id: 'hero-top', prodsPerPage: 2},
+          {id: 'hero-bottom', prodsPerPage: 2},
+          {id: 'hero-left', prodsPerPage: 2},
+          {id: 'hero-right', prodsPerPage: 2}]);
+
+        var layoutToolbarView = new LayoutToolbar({collection: layouts}).render();
+
         var prods = new ProductList([{id: '1a', sku: '1a'},{id: '2b', sku: '2b'},{id: '3c', sku: '3c'},{id: '4d', sku: '4d'},{id: '5e', sku: '5e'},{id: '6f', sku: '6f'}]);
-        var layoutDisplayView = new LayoutDisplayView({collection: prods, layout: new Layout({id: 'hero-top', prodsPerPage: 2})});
+
+        var layoutDisplayView = new LayoutDisplayView({collection: prods, layouts: layouts});
         layoutDisplayView.render();
       });
     </script>

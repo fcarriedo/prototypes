@@ -13,12 +13,13 @@ Page = Backbone.Model.extend({
 });
 Bullet = Backbone.Model.extend({});
 Layout = Backbone.Model.extend({
-  defaults: function() { return{ id: 'default', prodsPerPage: 4} },
+  defaults: function() { return{ id: 'default', prodsPerPage: 4, active: false} },
 });
 
 // Collections
 ProductList = Backbone.Collection.extend({model: Product});
 PageList = Backbone.Collection.extend({model: Page});
+LayoutList = Backbone.Collection.extend({model: Layout});
 
 // Views
 PageView = Backbone.View.extend({
@@ -221,20 +222,9 @@ BulletView = Backbone.View.extend({
 LayoutDisplayView = Backbone.View.extend({
   el: $('#app'),
   initialize: function(opts) {
-    var $layoutToolbar = this.$('#layout-toolbar');
-    // Fill the layout chooser
-    var allLayouts = [];
-    allLayouts.push( new Layout({id: 'default', prodsPerPage: 4}) );
-    allLayouts.push( new Layout({id: 'hero-top', prodsPerPage: 2}) );
-    allLayouts.push( new Layout({id: 'hero-bottom', prodsPerPage: 2}) );
-    allLayouts.push( new Layout({id: 'hero-left', prodsPerPage: 2}) );
-    allLayouts.push( new Layout({id: 'hero-right', prodsPerPage: 2}) );
+    this.layouts = opts.layouts;
 
-    for(ix in allLayouts) {
-      $layoutToolbar.append(new LayoutIconView({model: allLayouts[ix]}).render().el);
-    }
-
-    eventBus.on('layoutChanged', this.updateLayout, this);
+    this.layouts.on('change:active', this.updateLayout, this);
 
     this.layout = opts.layout ? opts.layout : new Layout();
   },
@@ -259,24 +249,48 @@ LayoutDisplayView = Backbone.View.extend({
     new PageListView({collection: pageList}).render();
   },
   updateLayout: function(newLayout) {
-    console.log('Updating layout to: ' + newLayout.id);
-    this.layout = newLayout;
-    this.render();
+    if(newLayout.get('active')) {
+      this.layout = newLayout;
+      this.render();
+    }
   }
 });
-LayoutIconView = Backbone.View.extend({
+LayoutToolbar = Backbone.View.extend({
+  el: $('#layout-toolbar'),
+  initialize: function() {
+    this.collection.on('change:active', this.updateActiveLayout, this);
+  },
+  render: function() {
+    this.collection.each(function(layout) {
+      this.$el.append(new LayoutView({model: layout}).render().el);
+    }, this);
+    return this;
+  },
+  updateActiveLayout: function(updatingLayout) {
+    if(updatingLayout.get('active')) {
+      this.collection.each(function(layout) {
+        if(layout.id !== updatingLayout.id) layout.set('active', false);
+      });
+    }
+  }
+});
+LayoutView = Backbone.View.extend({
   className: 'layout-icon',
   events: {
-    'click' : 'applyLayout'
+    'click' : 'setActiveLayout'
   },
   initialize: function() {
     this.$el.attr('title', this.model.id);
+    this.model.on('change:active', this.updateActiveUI, this);
   },
   render: function() {
     return this;
   },
-  applyLayout: function() {
-    eventBus.trigger('layoutChanged', this.model);
+  updateActiveUI: function() {
+    this.$el.toggleClass('selected', this.model.get('active'));
+  },
+  setActiveLayout: function() {
+    this.model.set('active', true);
   }
 });
 
