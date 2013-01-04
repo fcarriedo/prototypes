@@ -9,6 +9,10 @@ Page = Backbone.Model.extend({
   defaults: function() { return{active: false} },
   initialize: function(){
     this.products = this.nestCollection(this, 'products', new ProductList(this.get('products')));
+  },
+  sync: function() {
+    // Prevent default sync w/ backend on destroy and else.
+    return false;
   }
 });
 Bullet = Backbone.Model.extend({});
@@ -82,7 +86,6 @@ PageView = Backbone.View.extend({
   render: function() {
     if(this.model.products.isEmpty()) {
       // If there are no products to hold, we delete it.
-      this.model.id = null;
       this.model.destroy();
       var self = this;
       this.$el.fadeOut(function() {
@@ -160,7 +163,8 @@ PageListView = Backbone.View.extend({
       lastPage.products.add(new Product({}));
     } else {
       // We need to create a new page and add it there.
-      var newPage = new Page({id: lastPage.id+1, layout: layout});
+      var newPgId = parseInt(lastPage.id) + 1;
+      var newPage = new Page({id: newPgId, layout: layout});
       // Add an empty product
       newPage.products.add(new Product({}));
       // Add it to the collection
