@@ -127,7 +127,12 @@ PageListView = Backbone.View.extend({
     this.$bulletContainer = $('#bullet-container');
     this.showHideBullets();
 
-    eventBus.on('toolbarSpaceClicked', this.addEmptyProd, this);
+    // Clean them up
+    this.$el.html('');
+    this.$bulletContainer.html('');
+
+    // TODO: Fix this rendering/creating to prevent multiple event registering
+    eventBus.off('toolbarSpaceClicked').on('toolbarSpaceClicked', this.addEmptyProd, this);
 
     // Listeners
     this.collection.on('add', this.addPage, this);
