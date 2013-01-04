@@ -30,9 +30,12 @@ body { font-family: Verdana }
   border: thin dashed #ddd;
   color: #bbb;
 }
-.product.empty .close {
+.product.empty .delete {
   margin-left: 52px;
   cursor: pointer;
+}
+.product.empty .delete:hover {
+  color: #777;
 }
 
 

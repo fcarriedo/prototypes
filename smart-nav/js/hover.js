@@ -189,9 +189,9 @@ PageListView = Backbone.View.extend({
 ProductView = Backbone.View.extend({
   className: 'product',
   events: {
-    'mouseenter'   : 'showActions',
-    'mouseleave'   : 'hideActions',
-    'click .close' : 'deleteEmptyProd'
+    'mouseenter'    : 'showActions',
+    'mouseleave'    : 'hideActions',
+    'click .delete' : 'deleteEmptyProd'
   },
   initialize: function() {
     if(this.model.id) {
@@ -206,7 +206,7 @@ ProductView = Backbone.View.extend({
     if(this.model.id) {
       this.$el.html('<span class="product-info">sku: ' + this.model.get('sku') + '</span>');
     } else {
-      this.$el.html('<span class="product-info">empty</span><span class="close hide" title="delete">x</span>');
+      this.$el.html('<span class="product-info">empty</span><span class="delete hide" title="delete">x</span>');
     }
     return this;
   },
@@ -214,10 +214,10 @@ ProductView = Backbone.View.extend({
     this.model.destroy();
   },
   showActions: function() {
-    this.$('.close').show();
+    this.$('.delete').show();
   },
   hideActions: function() {
-    this.$('.close').hide();
+    this.$('.delete').hide();
   }
 });
 BulletView = Backbone.View.extend({
