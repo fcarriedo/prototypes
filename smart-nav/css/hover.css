@@ -22,11 +22,17 @@ body { font-family: Verdana }
   width: 100px;
   height: 75px;
   float: left;
-  border: thin dashed #999;
-}
-.product-info {
+  border: thin solid #999;
   font-size: 8pt;
   color: #999;
+}
+.product.empty {
+  border: thin dashed #ddd;
+  color: #bbb;
+}
+.product.empty .close {
+  margin-left: 52px;
+  cursor: pointer;
 }
 
 
@@ -44,15 +50,18 @@ body { font-family: Verdana }
   margin-bottom: 5px;
   -moz-border-radius: 7px;
   border-radius: 7px;
+  cursor: pointer;
 }
 .bullet:hover {
   border: solid thin #ccc;
   background-color: #aaa;
-  cursor: pointer;
 }
 .selected {
   border-color: #3399FF;
   background-color: #6699FF;
+}
+.hide {
+  display: none;
 }
 #bullet-container > .active {background-color: #aaa; border-color: #ccc; cursor: pointer;}
 #bullet-container > .sliding {border: thin dashed orange; background-color: lightyellow;}
@@ -64,9 +73,17 @@ body { font-family: Verdana }
 }
 .layout-icon {
   width: 15px;
+  cursor: pointer;
   height: 15px;
   border: thin solid orange;
   margin-bottom: 5px;
+}
+#toolbar-space {
+  cursor: pointer;
+  margin: 0px 0px 10px 280px;
+  border: thin dashed #888;
+  width: 15px;
+  height: 15px;
 }
 
 

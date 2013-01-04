@@ -30,7 +30,7 @@ PageView = Backbone.View.extend({
     'click' : 'setActive'
   },
   initialize: function() {
-    this.listenTo(this.model, 'change:active', this.onActiveChange);
+    this.model.on('change:active', this.onActiveChange, this);
 
     // TODO: Check if we can minimize renders later
     this.model.products.on('add remove reset', this.render, this);
@@ -80,17 +80,28 @@ PageView = Backbone.View.extend({
     });
   },
   render: function() {
-    this.$el.html('');
+    if(this.model.products.isEmpty()) {
+      // If there are no products to hold, we delete it.
+      this.model.id = null;
+      this.model.destroy();
+      var self = this;
+      this.$el.fadeOut(function() {
+        self.remove();
+      });
+    } else {
+      this.$el.html('');
 
-    var layout = this.model.get('layout');
-    var layoutTmpl = $('#' + layout.id).clone();
+      var layout = this.model.get('layout');
+      var layoutTmpl = $('#' + layout.id).clone();
 
-    this.$el.html(layoutTmpl.html());
-    var $prodContainer = this.$el.find('.prod-container-' + layout.id);
+      this.$el.html(layoutTmpl.html());
+      var $prodContainer = this.$el.find('.prod-container-' + layout.id);
 
-    this.model.products.each(function(prod) {
-      $prodContainer.append(new ProductView({model: prod}).render().el);
-    }, this);
+      this.model.products.each(function(prod) {
+        $prodContainer.append(new ProductView({model: prod}).render().el);
+      }, this);
+    }
+
     return this;
   },
   setActive: function() {
@@ -98,9 +109,6 @@ PageView = Backbone.View.extend({
   },
   onActiveChange: function() {
     if(this.model.get('active')) {
-      // Trigger the pageActivated event
-      eventBus.trigger('pageActivated', this.model.id);
-
       this.$el.addClass('active');
       // Perform the actual slide
       $('#page-viewport').scrollTo('#'+this.$el.attr('id'), 250, {over: -0.12});
@@ -109,41 +117,29 @@ PageView = Backbone.View.extend({
     }
   }
 });
+// TODO: Rewrite the rendering
 PageListView = Backbone.View.extend({
   el: $('#page-viewport'),
   initialize: function() {
     this.$bulletContainer = $('#bullet-container');
     this.showHideBullets();
 
+    eventBus.on('toolbarSpaceClicked', this.addEmptyProd, this);
+
+    // Listeners
+    this.collection.on('add', this.addPage, this);
+    // Listening to page active change
+    this.collection.on('change:active', this.onPageActivated, this);
+    // When destroying a page, set the last existing page as active.
+    this.collection.on('destroy', this.setActivePageIfNecessary, this);
+  },
+  render: function() {
     // Clean them up
     this.$el.html('');
     this.$bulletContainer.html('');
 
-    // Listeners
-    this.listenTo(this.collection, 'add remove', this.showHideBullets);
-    // Listening for the event bus 'pageActivated' event
-    eventBus.on('pageActivated', this.onPageActivated, this);
-
-    this.pageViews = [];
-    this.bulletViews = [];
-    this.collection.each(function(page) {
-      this.pageViews.push(new PageView({model: page}));
-      this.bulletViews.push(new BulletView({model: page}));
-    }, this);
-  },
-  onPageActivated: function(pgId) {
-    this.collection.each(function(page) {
-      if(page.id != pgId) page.set('active', false);
-    });
-  },
-  showHideBullets: function() {
-    this.$bulletContainer.toggle(this.collection.length > 1);
-  },
-  render: function() {
-    for(var i=0; i<this.pageViews.length; i++) {
-      this.$el.append(this.pageViews[i].render().$el.fadeIn());
-      this.$bulletContainer.append(this.bulletViews[i].render().$el.fadeIn());
-    }
+    // Add all pages to the view
+    this.collection.each(this.addPage, this);
 
     // Set the first page as active if none active pages exist
     if(this.collection.every(function(page) { return page.get('active') === false})) {
@@ -152,16 +148,76 @@ PageListView = Backbone.View.extend({
 
     return this;
   },
+  addPage: function(page) {
+    this.$el.append(new PageView({model: page}).render().$el.fadeIn('fast'));
+    this.$bulletContainer.append(new BulletView({model: page}).render().$el.fadeIn('fast'));
+    this.showHideBullets();
+  },
+  addEmptyProd: function() {
+    var lastPage = this.collection.at(this.collection.length-1);
+    var layout = lastPage.get('layout');
+    if(lastPage.products.length < layout.get('prodsPerPage')) {
+      lastPage.products.add(new Product({}));
+    } else {
+      // We need to create a new page and add it there.
+      var newPage = new Page({id: lastPage.id+1, layout: layout});
+      // Add an empty product
+      newPage.products.add(new Product({}));
+      // Add it to the collection
+      this.collection.add(newPage);
+    }
+
+    // Set the adding product page as active
+    this.collection.at(this.collection.length-1).set('active', true);
+  },
+  onPageActivated: function(updatingPage) {
+    if(updatingPage.get('active')) {
+      this.collection.each(function(page) {
+        if(page.id != updatingPage.id) page.set('active', false);
+      });
+    }
+  },
+  showHideBullets: function() {
+    this.$bulletContainer.toggle(this.collection.length > 1);
+  },
+  setActivePageIfNecessary: function(deletingPage) {
+    if(deletingPage.get('active')) {
+      this.collection.at(this.collection.length-1).set('active', true);
+    }
+  }
 });
 ProductView = Backbone.View.extend({
   className: 'product',
+  events: {
+    'mouseenter'   : 'showActions',
+    'mouseleave'   : 'hideActions',
+    'click .close' : 'deleteEmptyProd'
+  },
   initialize: function() {
-    this.$el.attr('id', 'sku-' + this.model.get('sku'));
+    if(this.model.id) {
+      this.$el.attr('id', 'sku-' + this.model.get('sku'));
+    } else {
+      this.$el.attr('id', 'sku-empty-' + this.model.cid);
+      this.$el.addClass('empty');
+    }
     this.$el.data('model', this.model);
   },
   render: function() {
-    this.$el.html('<span class="product-info">sku: ' + this.model.get('sku') + '</span>');
+    if(this.model.id) {
+      this.$el.html('<span class="product-info">sku: ' + this.model.get('sku') + '</span>');
+    } else {
+      this.$el.html('<span class="product-info">empty</span><span class="close hide" title="delete">x</span>');
+    }
     return this;
+  },
+  deleteEmptyProd: function() {
+    this.model.destroy();
+  },
+  showActions: function() {
+    this.$('.close').show();
+  },
+  hideActions: function() {
+    this.$('.close').hide();
   }
 });
 BulletView = Backbone.View.extend({
@@ -173,7 +229,8 @@ BulletView = Backbone.View.extend({
   },
   initialize: function() {
     this.page = this.model;
-    this.listenTo(this.page, 'change:active', this.onActiveChange);
+    this.page.on('change:active', this.onActiveChange, this);
+    this.page.on('destroy', this.remove, this);
   },
   render: function() {
     this.$el.attr('title', 'Page ' + (parseInt(this.page.get('id'))+1));
@@ -221,6 +278,9 @@ BulletView = Backbone.View.extend({
 });
 LayoutDisplayView = Backbone.View.extend({
   el: $('#app'),
+  events: {
+    'click #toolbar-space' : 'triggerAddEmptyProd'
+  },
   initialize: function(opts) {
     this.layouts = opts.layouts;
 
@@ -253,6 +313,9 @@ LayoutDisplayView = Backbone.View.extend({
       this.layout = newLayout;
       this.render();
     }
+  },
+  triggerAddEmptyProd: function() {
+    eventBus.trigger('toolbarSpaceClicked');
   }
 });
 LayoutToolbar = Backbone.View.extend({
