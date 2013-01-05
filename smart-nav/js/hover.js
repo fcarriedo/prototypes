@@ -88,7 +88,7 @@ PageView = Backbone.View.extend({
       // If there are no products to hold, we delete it.
       this.model.destroy();
       var self = this;
-      this.$el.fadeOut(function() {
+      this.$el.fadeOut('fast', function() {
         self.remove();
       });
     } else {
