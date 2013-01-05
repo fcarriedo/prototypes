@@ -328,14 +328,23 @@ LayoutDisplayView = Backbone.View.extend({
   }
 });
 LayoutToolbar = Backbone.View.extend({
-  el: $('#layout-toolbar'),
+  el: $('#layout-popover'),
   initialize: function() {
     this.collection.on('change:active', this.updateActiveLayout, this);
+
+    var html = $('<div></div>');
+    this.collection.each(function(layout) {
+      html.append(new LayoutView({model: layout}).render().el);
+    }, this);
+
+    this.$el.popover({
+      title: 'Select your layout...',
+      html: true,
+      placement: 'top',
+      content: html
+    });
   },
   render: function() {
-    this.collection.each(function(layout) {
-      this.$el.append(new LayoutView({model: layout}).render().el);
-    }, this);
     return this;
   },
   updateActiveLayout: function(updatingLayout) {
@@ -356,6 +365,7 @@ LayoutView = Backbone.View.extend({
     this.model.on('change:active', this.updateActiveUI, this);
   },
   render: function() {
+    this.$el.text(this.model.id);
     return this;
   },
   updateActiveUI: function() {

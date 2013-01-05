@@ -75,9 +75,13 @@ body { font-family: Verdana }
   margin-left: 30px;
 }
 .layout-icon {
-  width: 15px;
+  width: 50px;
+  height: 50px;
+  font-size: 8px;
+  color: #aaa;
+  margin: 10px 0px 0px 10px;
+  float: left;
   cursor: pointer;
-  height: 15px;
   border: thin solid orange;
   margin-bottom: 5px;
 }
@@ -87,6 +91,12 @@ body { font-family: Verdana }
   border: thin dashed #888;
   width: 15px;
   height: 15px;
+}
+div#app {
+  margin: 0px 0px 0px 250px;
+}
+.category {
+  margin: 150px 0px 0px -200px;
 }
 
 
