@@ -12,7 +12,7 @@ body { font-family: Verdana }
   height: 187px;
   background-color: white;
   border: thin solid #ccc;
-  margin: 10px auto;
+  margin: 10px 25px;
 }
 .page:first-child {margin-top: 20px}
 .page:last-child {margin-bottom: 20px}

@@ -17,7 +17,7 @@ Page = Backbone.Model.extend({
 });
 Bullet = Backbone.Model.extend({});
 Layout = Backbone.Model.extend({
-  defaults: function() { return{ id: 'default', prodsPerPage: 4, active: false} },
+  defaults: function() { return{ id: 'default', prodsPerPage: 4, active: false} }
 });
 
 // Collections
