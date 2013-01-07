@@ -2,7 +2,7 @@ body { font-family: Verdana }
 #page-viewport {
   width: 300px;
   height: 235px;
-  border: thin solid #999;
+  border: 1px solid #999;
   background-color: #efefef;
   overflow: hidden;
   float: left;
@@ -11,7 +11,7 @@ body { font-family: Verdana }
   width: 250px;
   height: 187px;
   background-color: white;
-  border: thin solid #ccc;
+  border: 1px solid #ccc;
   margin: 10px 25px;
 }
 .page:first-child {margin-top: 20px}
@@ -22,12 +22,12 @@ body { font-family: Verdana }
   width: 100px;
   height: 75px;
   float: left;
-  border: thin solid #999;
+  border: 1px solid #999;
   font-size: 8pt;
   color: #999;
 }
 .product.empty {
-  border: thin dashed #ddd;
+  border: 1px dashed #ddd;
   color: #bbb;
 }
 .product.empty .delete {
@@ -45,7 +45,7 @@ body { font-family: Verdana }
   margin-left: 10px;
 }
 .bullet {
-  border: solid thin #999;
+  border: solid 1px #999;
   background-color: #efefef;
   margin: 7px auto;
   width: 15px;
@@ -56,7 +56,7 @@ body { font-family: Verdana }
   cursor: pointer;
 }
 .bullet:hover {
-  border: solid thin #ccc;
+  border: solid 1px #ccc;
   background-color: #aaa;
 }
 .selected {
@@ -67,7 +67,7 @@ body { font-family: Verdana }
   display: none;
 }
 #bullet-container > .active {background-color: #aaa; border-color: #ccc; cursor: pointer;}
-#bullet-container > .sliding {border: thin dashed orange; background-color: lightyellow;}
+#bullet-container > .sliding {border: 1px dashed orange; background-color: lightyellow;}
 
 #layout-toolbar {
   height: 225px;
@@ -82,13 +82,13 @@ body { font-family: Verdana }
   margin: 10px 0px 0px 10px;
   float: left;
   cursor: pointer;
-  border: thin solid orange;
+  border: 1px solid orange;
   margin-bottom: 5px;
 }
 #toolbar-space {
   cursor: pointer;
   margin: 0px 0px 10px 280px;
-  border: thin dashed #888;
+  border: 1px dashed #888;
   width: 15px;
   height: 15px;
 }
@@ -102,7 +102,7 @@ div#app {
 
 /* Template related */
 [class^='ad-'] {
-  border: thin solid red;
+  border: 1px solid red;
   margin: 10px 0px 0px 15px;
 }
 [class^='prod-container-'] {
