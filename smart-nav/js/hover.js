@@ -39,7 +39,9 @@ PageView = Backbone.View.extend({
     this.model.on('change:active', this.onActiveChange, this);
 
     // TODO: Check if we can minimize renders later
-    this.model.products.on('add remove reset', this.render, this);
+    this.model.products.on('add', this.addProduct, this);
+    this.model.products.on('remove', this.removeProduct, this);
+    this.model.products.on('reset', this.render, this);
 
     this.model.on('change:layout', this.render, this);
 
@@ -89,12 +91,12 @@ PageView = Backbone.View.extend({
           var srcPage = ui.sender.data('model');
           if(srcPage.id < self.model.id) {
             // Came from a previous page. Should take the first one and append it to the source page.
-            var shiftProd = self.model.products.shift();
-            srcPage.products.push(shiftProd);
+            //var shiftProd = self.model.products.shift();
+            //srcPage.products.push(shiftProd);
           } else {
             // Came from a further page. Should take the last one and preppend it to the source page.
-            var popProd = self.model.products.pop();
-            srcPage.products.unshift(popProd);
+            //var popProd = self.model.products.pop();
+            //srcPage.products.unshift(popProd);
           }
         }
       }
@@ -115,14 +117,22 @@ PageView = Backbone.View.extend({
       var layoutTmpl = $('#' + layout.id).clone();
 
       this.$el.html(layoutTmpl.html());
-      var $prodContainer = this.$el.find('.prod-container-' + layout.id);
+      this.$prodContainer = this.$('.prod-container-' + layout.id);
 
-      this.model.products.each(function(prod) {
-        $prodContainer.append(new ProductView({model: prod}).render().el);
-      }, this);
+      this.model.products.each(this.addProduct, this);
     }
 
     return this;
+  },
+  addProduct: function(prod) {
+    console.log('Adding prod: ' + prod.id + ' to page ' + this.model.id);
+    var prodView = new ProductView({model: prod});
+    prod.view = prodView;
+    this.$prodContainer.append(prodView.render().el);
+  },
+  removeProduct: function(prod) {
+    console.log('Removing view from prod: ' + prod.id + ' on page ' + this.model.id);
+    prod.view.remove();
   },
   setActive: function() {
     this.model.set('active', true);
@@ -215,11 +225,14 @@ PageListView = Backbone.View.extend({
   prodOverPage: function(prod, srcPg, dstPg) {
     if(srcPg.id < dstPg.id) {
       console.log('Need to take the first from the dst page and append it to the source page');
-      //var dstFirst = dstPg.products.shift();
+      var dstFirst = dstPg.products.shift();
       //    srcPg.products.remove(prod)
-      //srcPg.products.add(dstFirst);
+      srcPg.products.add(dstFirst);
     } else if(srcPg.id > dstPg.id) {
       console.log('Need to take the first from the src page and unshift it to the dst page');
+      var dstLast = dstPg.products.pop();
+      srcPg.products.unshift(dstLast);
+      srcPg.products.each(function(prod) {console.log(prod.id)});
     } else {
       // if equal.. do nothing for now. Need to understand comming back.
       console.log('Doing nothing... same src page and dst page.');
