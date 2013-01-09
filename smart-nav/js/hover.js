@@ -30,6 +30,8 @@ PageView = Backbone.View.extend({
   className: 'page',
   hovered: false,
   hoverDelay: 350,
+  // Holds the previous hover state for prodOverPage state machine
+  previousHoverState: {prodId: -1, srcPgId: -1, dstPgId: -1},
   events: {
     'click' : 'setActive'
   },
@@ -53,7 +55,22 @@ PageView = Backbone.View.extend({
         self.hovered = true;
         setTimeout(function() {
           if(self.hovered) {
+            // Remove the other element 
             self.setActive();
+
+            // Trigger product-hover-page transition event on state change
+            var srcPg = ui.sender.data('model');
+            var dstPg = self.model;
+            var prod = ui.item.data('model');
+            var prevHs = self.previousHoverState;
+            //if(prod) {
+              if(prevHs.prodId != prod.id || prevHs.srcPgId != srcPg.id || prevHs.dstPgId != dstPg.id) {
+                // Overwrite previous hover state
+                _.extend(self.previousHoverState, {prodId: prod.id, srcPgId: srcPg.id, dstPgId: dstPg.id});
+                // Trigger the product hover change
+                eventBus.trigger('prodOverPage', prod, srcPg, dstPg);
+              }
+            //}
           }
         }, self.hoverDelay);
       },
@@ -84,7 +101,7 @@ PageView = Backbone.View.extend({
     });
   },
   render: function() {
-    if(this.model.products.isEmpty()) {
+    if(this.model.products.isEmpty() && !this.hovered) {
       // If there are no products to hold, we delete it.
       this.model.destroy();
       var self = this;
@@ -133,6 +150,7 @@ PageListView = Backbone.View.extend({
 
     // TODO: Fix this rendering/creating to prevent multiple event registering
     eventBus.off('toolbarSpaceClicked').on('toolbarSpaceClicked', this.addEmptyProd, this);
+    eventBus.off('prodOverPage').on('prodOverPage', this.prodOverPage, this);
 
     // Listeners
     this.collection.on('add', this.addPage, this);
@@ -192,6 +210,19 @@ PageListView = Backbone.View.extend({
   setActivePageIfNecessary: function(deletingPage) {
     if(deletingPage.get('active')) {
       this.collection.at(this.collection.length-1).set('active', true);
+    }
+  },
+  prodOverPage: function(prod, srcPg, dstPg) {
+    if(srcPg.id < dstPg.id) {
+      console.log('Need to take the first from the dst page and append it to the source page');
+      //var dstFirst = dstPg.products.shift();
+      //    srcPg.products.remove(prod)
+      //srcPg.products.add(dstFirst);
+    } else if(srcPg.id > dstPg.id) {
+      console.log('Need to take the first from the src page and unshift it to the dst page');
+    } else {
+      // if equal.. do nothing for now. Need to understand comming back.
+      console.log('Doing nothing... same src page and dst page.');
     }
   }
 });
