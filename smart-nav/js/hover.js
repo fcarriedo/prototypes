@@ -39,11 +39,9 @@ PageView = Backbone.View.extend({
     this.model.on('change:active', this.onActiveChange, this);
 
     // TODO: Check if we can minimize renders later
-    this.model.products.on('add', this.addProduct, this);
-    this.model.products.on('remove', this.removeProduct, this);
-    this.model.products.on('reset', this.render, this);
+    this.model.products.on('add remove reset', this.render, this);
 
-    this.model.on('change:layout', this.render, this);
+    //this.model.on('change:layout', this.render, this);
 
     this.$el.attr('id', 'page-' + this.model.id);
     this.$el.data('model', this.model);
@@ -70,7 +68,7 @@ PageView = Backbone.View.extend({
                 // Overwrite previous hover state
                 _.extend(self.previousHoverState, {prodId: prod.id, srcPgId: srcPg.id, dstPgId: dstPg.id});
                 // Trigger the product hover change
-                eventBus.trigger('prodOverPage', prod, srcPg, dstPg);
+                self.productHover(ui.sender, self.$el);
               }
             //}
           }
@@ -86,19 +84,6 @@ PageView = Backbone.View.extend({
           prodsTmp.push( $(this).data('model') );
         });
         self.model.products.reset(prodsTmp);
-
-        if(ui.sender) {
-          var srcPage = ui.sender.data('model');
-          if(srcPage.id < self.model.id) {
-            // Came from a previous page. Should take the first one and append it to the source page.
-            //var shiftProd = self.model.products.shift();
-            //srcPage.products.push(shiftProd);
-          } else {
-            // Came from a further page. Should take the last one and preppend it to the source page.
-            //var popProd = self.model.products.pop();
-            //srcPage.products.unshift(popProd);
-          }
-        }
       }
     });
   },
@@ -124,15 +109,11 @@ PageView = Backbone.View.extend({
 
     return this;
   },
-  addProduct: function(prod) {
-    console.log('Adding prod: ' + prod.id + ' to page ' + this.model.id);
-    var prodView = new ProductView({model: prod});
-    prod.view = prodView;
-    this.$prodContainer.append(prodView.render().el);
+  updateLayout: function(newLayout) {
+    console.log('new Layout: ' + newLayout.id);
   },
-  removeProduct: function(prod) {
-    console.log('Removing view from prod: ' + prod.id + ' on page ' + this.model.id);
-    prod.view.remove();
+  addProduct: function(prod) {
+    this.$prodContainer.append(new ProductView({model: prod}).render().el);
   },
   setActive: function() {
     this.model.set('active', true);
@@ -144,6 +125,25 @@ PageView = Backbone.View.extend({
       $('#page-viewport').scrollTo('#'+this.$el.attr('id'), 250, {over: -0.12});
     } else {
       this.$el.removeClass('active');
+    }
+  },
+  productHover: function(srcPgView, dstPgView) {
+    var srcPg = srcPgView.data('model');
+    var dstPg = dstPgView.data('model');
+    if(srcPg.id < dstPg.id) {
+      // Need to take the first from the dst page and append it to the source page
+
+      // TODO: Find a way to find the first visible product since jQuery UI creates a 'visibility: hidden'
+      // element to perform the empty element that gets pushed around when sorting. nth-child(2) seems a bit aleatory
+      var dstFirst = dstPgView.find('.product:nth-child(2)'); 
+      srcPgView.find('[class^="prod-container-"]').append(dstFirst);
+    } else if(srcPg.id > dstPg.id) {
+      // Need to take the last from the dst page and prepend it to the src page'
+      var dstLast = dstPgView.find('.product:last-child');
+      srcPgView.find('[class^="prod-container-"]').prepend(dstLast);
+    } else {
+      // if equal.. do nothing for now. Need to understand comming back.
+      // Doing nothing... same src page and dst page.
     }
   }
 });
@@ -160,7 +160,6 @@ PageListView = Backbone.View.extend({
 
     // TODO: Fix this rendering/creating to prevent multiple event registering
     eventBus.off('toolbarSpaceClicked').on('toolbarSpaceClicked', this.addEmptyProd, this);
-    eventBus.off('prodOverPage').on('prodOverPage', this.prodOverPage, this);
 
     // Listeners
     this.collection.on('add', this.addPage, this);
@@ -222,22 +221,6 @@ PageListView = Backbone.View.extend({
       this.collection.at(this.collection.length-1).set('active', true);
     }
   },
-  prodOverPage: function(prod, srcPg, dstPg) {
-    if(srcPg.id < dstPg.id) {
-      console.log('Need to take the first from the dst page and append it to the source page');
-      var dstFirst = dstPg.products.shift();
-      //    srcPg.products.remove(prod)
-      srcPg.products.add(dstFirst);
-    } else if(srcPg.id > dstPg.id) {
-      console.log('Need to take the first from the src page and unshift it to the dst page');
-      var dstLast = dstPg.products.pop();
-      srcPg.products.unshift(dstLast);
-      srcPg.products.each(function(prod) {console.log(prod.id)});
-    } else {
-      // if equal.. do nothing for now. Need to understand comming back.
-      console.log('Doing nothing... same src page and dst page.');
-    }
-  }
 });
 ProductView = Backbone.View.extend({
   className: 'product',
