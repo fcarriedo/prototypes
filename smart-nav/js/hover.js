@@ -124,23 +124,25 @@ PageView = Backbone.View.extend({
       this.$el.removeClass('active');
     }
   },
-  productHover: function(srcPgView, dstPgView) {
-    var srcPg = srcPgView.data('model');
-    var dstPg = dstPgView.data('model');
+  productHover: function($srcPg, $dstPg) {
+    var srcPg = $srcPg.data('model');
+    var dstPg = $dstPg.data('model');
     if(srcPg.id < dstPg.id) {
       // Need to take the first from the dst page and append it to the source page
 
       // TODO: Find a way to find the first visible product since jQuery UI creates a 'visibility: hidden'
       // element to perform the empty element that gets pushed around when sorting. nth-child(2) seems a bit aleatory
-      var dstFirst = dstPgView.find('.product:nth-child(2)'); 
-      srcPgView.find('[class^="prod-container-"]').append(dstFirst);
+      var $dstFirst = $dstPg.find('.product:nth-child(2)'); 
+      $srcPg.find('[class^="prod-container-"]').append($dstFirst);
     } else if(srcPg.id > dstPg.id) {
       // Need to take the last from the dst page and prepend it to the src page'
-      var dstLast = dstPgView.find('.product:last-child');
-      srcPgView.find('[class^="prod-container-"]').prepend(dstLast);
+      var $dstLast = $dstPg.find('.product:last-child');
+      $srcPg.find('[class^="prod-container-"]').prepend($dstLast);
     } else {
       // if equal.. do nothing for now. Need to understand comming back.
       // Doing nothing... same src page and dst page.
+      // If equal and already full, then push products forward or backward
+      // if equal and space left, do nothing.
     }
   }
 });
