@@ -75,6 +75,7 @@ PageView = Backbone.View.extend({
               _.extend(self.previousHoverState, {prodId: prod.id, srcPgId: srcPg.id, dstPgId: dstPg.id});
               // Trigger the product hover change and send the relevant jQuery objects.
               eventBus.trigger('prodHoverTransition', ui.sender, self.$el);
+              console.log('new state: ' + JSON.stringify(self.previousHoverState));
             }
           }
         }, self.hoverDelay);
@@ -93,7 +94,7 @@ PageView = Backbone.View.extend({
     });
   },
   render: function() {
-    if(this.model.products.isEmpty() && !this.hovered) {
+    if(this.model.products.isEmpty()) {
       // If there are no products to hold, we delete it.
       this.model.destroy();
       var self = this;
@@ -204,9 +205,9 @@ PageListView = Backbone.View.extend({
     if(srcPg.id < dstPg.id) {
       // Need to take the first from the dst page and append it to the source page
 
-      // TODO: Find a way to find the first visible product since jQuery UI creates a 'visibility: hidden'
-      // element to perform the empty element that gets pushed around when sorting. nth-child(2) seems a bit aleatory
-      var $dstFirst = $dstPg.find('.product:nth-child(2)'); 
+      // Need to filter in this way to get the first elem since jQuery ':visible'
+      // visibility: hidden or opacity: 0 are considered visible, since they still consume space in the layout.
+      var $dstFirst = $dstPg.find('.product').filter(function() { return $(this).css('visibility') !== 'hidden' }).eq(0);
       $srcPg.find('[class^="prod-container-"]').append($dstFirst);
     } else if(srcPg.id > dstPg.id) {
       // Need to take the last from the dst page and prepend it to the src page'
