@@ -31,7 +31,7 @@ PageView = Backbone.View.extend({
   hovered: false,
   hoverDelay: 350,
   // Holds the previous hover state for prodOverPage state machine
-  previousHoverState: {prodId: -1, srcPgId: -1, dstPgId: -1},
+  previousHoverState: {prodId: null, srcPgId: null, dstPgId: null},
   events: {
     'click' : 'setActive'
   },
@@ -46,6 +46,7 @@ PageView = Backbone.View.extend({
 
     // Model events
     this.model.on('change:active', this.onActiveChange, this);
+    this.model.on('productsChanged', this.updateProducts, this);
     // TODO: Check if we can minimize renders later
     // Page products events
     this.model.products.on('add remove reset', this.render, this);
@@ -71,6 +72,11 @@ PageView = Backbone.View.extend({
             var prod = ui.item.data('model');
             var prevHs = self.previousHoverState;
             if(prevHs.prodId != prod.id || prevHs.srcPgId != srcPg.id || prevHs.dstPgId != dstPg.id) {
+              console.log('prev state: ' + JSON.stringify(self.previousHoverState));
+
+              // if no previous state do nothing (do not trigger)
+              // if(srcPg == dstPg) && prev.srcPg
+
               // Overwrite previous hover state
               _.extend(self.previousHoverState, {prodId: prod.id, srcPgId: srcPg.id, dstPgId: dstPg.id});
               // Trigger the product hover change and send the relevant jQuery objects.
@@ -84,12 +90,12 @@ PageView = Backbone.View.extend({
         self.hovered = false;
       },
       update: function(evt, ui) {
-        // We check the prods that exist on the current page and update it (reset).
-        var prodsTmp = [];
-        self.$el.find('.product').each(function(ix) {
-          prodsTmp.push( $(this).data('model') );
-        });
-        self.model.products.reset(prodsTmp);
+        // Just send one event for the active page
+        if(self.model.get('active')) {
+          var prod = ui.item.data('model');
+          var pg = self.model;
+          self.model.trigger('productDropped', prod, pg);
+        }
       }
     });
   },
@@ -122,6 +128,15 @@ PageView = Backbone.View.extend({
     } else {
       this.$el.removeClass('active');
     }
+  },
+  updateProducts: function() {
+    console.log('Update products of page: ' + this.model.id);
+    // We check the prods that exist on the current page and update it (reset).
+    var prodsTmp = [];
+    this.$el.find('.product').each(function(ix) {
+      prodsTmp.push( $(this).data('model') );
+    });
+    this.model.products.reset(prodsTmp);
   }
 });
 // TODO: Rewrite the rendering
@@ -145,6 +160,8 @@ PageListView = Backbone.View.extend({
     this.collection.on('change:active', this.onPageActivated, this);
     // When destroying a page, set the last existing page as active.
     this.collection.on('destroy', this.setActivePageIfNecessary, this);
+    // When a product gets dropped after dragging.
+    this.collection.on('productDropped', this.onProductDropped, this);
   },
   render: function() {
     // Clean them up
@@ -220,6 +237,11 @@ PageListView = Backbone.View.extend({
       // If equal and already full, then push products forward or backward
       // if equal and space left, do nothing.
     }
+  },
+  onProductDropped: function(prod, page) {
+    //console.log('Prod "' + prod.id + '" dropped on page ' + page.id);
+    // Update the products of each page
+    this.collection.each(function(pg) {pg.trigger('productsChanged')});
   }
 });
 ProductView = Backbone.View.extend({

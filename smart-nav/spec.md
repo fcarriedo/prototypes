@@ -6,6 +6,7 @@
 ## Pending
 
   * Animate leaving elem when shifting products between pages.
-  * Add empty spaces
-  * apply layouts
-  * enhance spec upload
+
+## Known issues
+
+  * prodHover new page - when only one product on new page... it breaks
