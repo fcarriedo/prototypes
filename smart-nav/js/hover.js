@@ -70,14 +70,12 @@ PageView = Backbone.View.extend({
             var dstPg = self.model;
             var prod = ui.item.data('model');
             var prevHs = self.previousHoverState;
-            //if(prod) {
-              if(prevHs.prodId != prod.id || prevHs.srcPgId != srcPg.id || prevHs.dstPgId != dstPg.id) {
-                // Overwrite previous hover state
-                _.extend(self.previousHoverState, {prodId: prod.id, srcPgId: srcPg.id, dstPgId: dstPg.id});
-                // Trigger the product hover change
-                self.productHover(ui.sender, self.$el);
-              }
-            //}
+            if(prevHs.prodId != prod.id || prevHs.srcPgId != srcPg.id || prevHs.dstPgId != dstPg.id) {
+              // Overwrite previous hover state
+              _.extend(self.previousHoverState, {prodId: prod.id, srcPgId: srcPg.id, dstPgId: dstPg.id});
+              // Trigger the product hover change and send the relevant jQuery objects.
+              eventBus.trigger('prodHoverTransition', ui.sender, self.$el);
+            }
           }
         }, self.hoverDelay);
       },
@@ -123,27 +121,6 @@ PageView = Backbone.View.extend({
     } else {
       this.$el.removeClass('active');
     }
-  },
-  productHover: function($srcPg, $dstPg) {
-    var srcPg = $srcPg.data('model');
-    var dstPg = $dstPg.data('model');
-    if(srcPg.id < dstPg.id) {
-      // Need to take the first from the dst page and append it to the source page
-
-      // TODO: Find a way to find the first visible product since jQuery UI creates a 'visibility: hidden'
-      // element to perform the empty element that gets pushed around when sorting. nth-child(2) seems a bit aleatory
-      var $dstFirst = $dstPg.find('.product:nth-child(2)'); 
-      $srcPg.find('[class^="prod-container-"]').append($dstFirst);
-    } else if(srcPg.id > dstPg.id) {
-      // Need to take the last from the dst page and prepend it to the src page'
-      var $dstLast = $dstPg.find('.product:last-child');
-      $srcPg.find('[class^="prod-container-"]').prepend($dstLast);
-    } else {
-      // if equal.. do nothing for now. Need to understand comming back.
-      // Doing nothing... same src page and dst page.
-      // If equal and already full, then push products forward or backward
-      // if equal and space left, do nothing.
-    }
   }
 });
 // TODO: Rewrite the rendering
@@ -159,6 +136,7 @@ PageListView = Backbone.View.extend({
 
     // TODO: Fix this rendering/creating to prevent multiple event registering
     eventBus.off('toolbarSpaceClicked').on('toolbarSpaceClicked', this.addEmptyProd, this);
+    eventBus.off('prodHoverTransition').on('prodHoverTransition', this.onProdHoverTransition, this);
 
     // Listeners
     this.collection.on('add', this.addPage, this);
@@ -220,6 +198,27 @@ PageListView = Backbone.View.extend({
       this.collection.at(this.collection.length-1).set('active', true);
     }
   },
+  onProdHoverTransition: function($srcPg, $dstPg) {
+    var srcPg = $srcPg.data('model');
+    var dstPg = $dstPg.data('model');
+    if(srcPg.id < dstPg.id) {
+      // Need to take the first from the dst page and append it to the source page
+
+      // TODO: Find a way to find the first visible product since jQuery UI creates a 'visibility: hidden'
+      // element to perform the empty element that gets pushed around when sorting. nth-child(2) seems a bit aleatory
+      var $dstFirst = $dstPg.find('.product:nth-child(2)'); 
+      $srcPg.find('[class^="prod-container-"]').append($dstFirst);
+    } else if(srcPg.id > dstPg.id) {
+      // Need to take the last from the dst page and prepend it to the src page'
+      var $dstLast = $dstPg.find('.product:last-child');
+      $srcPg.find('[class^="prod-container-"]').prepend($dstLast);
+    } else {
+      // if equal.. do nothing for now. Need to understand comming back.
+      // Doing nothing... same src page and dst page.
+      // If equal and already full, then push products forward or backward
+      // if equal and space left, do nothing.
+    }
+  }
 });
 ProductView = Backbone.View.extend({
   className: 'product',
