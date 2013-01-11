@@ -197,6 +197,7 @@ PageListView = Backbone.View.extend({
   setActivePageIfNecessary: function(deletingPage) {
     if(deletingPage.get('active')) {
       this.collection.at(this.collection.length-1).set('active', true);
+      this.showHideBullets();
     }
   },
   onProdHoverTransition: function($srcPg, $dstPg) {
