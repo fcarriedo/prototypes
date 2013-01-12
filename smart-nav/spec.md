@@ -10,4 +10,3 @@
 ## Known issues
 
   * prodHover new page - when only one product on new page... it breaks
-  * Deleting empty products from middle pages should shift products from further pages.

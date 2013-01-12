@@ -50,6 +50,7 @@ PageView = Backbone.View.extend({
     // TODO: Check if we can minimize renders later
     // Page products events
     this.model.products.on('add remove reset', this.render, this);
+    this.model.products.on('destroy', this.onProdDestroy, this);
 
     this.$el.attr('id', 'page-' + this.model.id);
     this.$el.data('model', this.model);
@@ -135,6 +136,9 @@ PageView = Backbone.View.extend({
       prodsTmp.push( $(this).data('model') );
     });
     this.model.products.reset(prodsTmp);
+  },
+  onProdDestroy: function(prod) {
+    this.model.trigger('productDeleted', this.model, prod);
   }
 });
 // TODO: Rewrite the rendering
@@ -157,9 +161,11 @@ PageListView = Backbone.View.extend({
     // Listening to page active change
     this.collection.on('change:active', this.onPageActivated, this);
     // When destroying a page, set the last existing page as active.
-    this.collection.on('destroy', this.setActivePageIfNecessary, this);
+    this.collection.on('destroy', this.onPageDestroyed, this);
     // When a product gets dropped after dragging.
     this.collection.on('productDropped', this.onProductDropped, this);
+    // When an empty product gets deleted
+    this.collection.on('productDeleted', this.onProductDeleted, this);
   },
   render: function() {
     // Clean them up
@@ -209,7 +215,7 @@ PageListView = Backbone.View.extend({
   showHideBullets: function() {
     this.$bulletContainer.toggle(this.collection.length > 1);
   },
-  setActivePageIfNecessary: function(deletingPage) {
+  onPageDestroyed: function(deletingPage) {
     if(deletingPage.get('active')) {
       this.collection.at(this.collection.length-1).set('active', true);
       this.showHideBullets();
@@ -249,7 +255,21 @@ PageListView = Backbone.View.extend({
   },
   onProductDropped: function(prod, page) {
     //console.log('Prod "' + prod.id + '" dropped on page ' + page.id);
-    // Update the products of each page
+    this.notifyProductsLayoutChanged();
+  },
+  onProductDeleted: function(pg) {
+    for(var i=parseInt(pg.id); i<this.collection.length-1; i++) {
+      var $srcPg = this.$('#page-' + (i+1));
+      var $dstPg = this.$('#page-' + i);
+
+      var $fistProd = this.getVisibleProducts($srcPg).first();
+      $dstPg.find('[class^="prod-container-"]').append($fistProd);
+    }
+
+    this.notifyProductsLayoutChanged();
+  },
+  // Notify that the products layout of each page have changed
+  notifyProductsLayoutChanged: function() {
     this.collection.each(function(pg) {pg.trigger('productsChanged')});
   }
 });
