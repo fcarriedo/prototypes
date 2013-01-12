@@ -46,7 +46,7 @@ PageView = Backbone.View.extend({
 
     // Model events
     this.model.on('change:active', this.onActiveChange, this);
-    this.model.on('productsChanged', this.updateProducts, this);
+    this.model.on('productsLayoutChanged', this.updateProducts, this);
     // TODO: Check if we can minimize renders later
     // Page products events
     this.model.products.on('add remove reset', this.render, this);
@@ -235,8 +235,8 @@ PageListView = Backbone.View.extend({
         var $srcPg = this.$('#page-' + (i+1));
         var $dstPg = this.$('#page-' + i);
 
-        var $fistProd = this.getVisibleProducts($srcPg).first();
-        $dstPg.find('[class^="prod-container-"]').append($fistProd);
+        var $firstProd = this.getVisibleProducts($srcPg).first();
+        $dstPg.find('[class^="prod-container-"]').append($firstProd);
       }
     } else if(shift === 'down') {
       // We need to shift down the last element of every in-range page
@@ -270,7 +270,7 @@ PageListView = Backbone.View.extend({
   },
   // Notify that the products layout of each page have changed
   notifyProductsLayoutChanged: function() {
-    this.collection.each(function(pg) {pg.trigger('productsChanged')});
+    this.collection.each(function(pg) {pg.trigger('productsLayoutChanged')});
   }
 });
 ProductView = Backbone.View.extend({
