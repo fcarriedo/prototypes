@@ -31,7 +31,7 @@ PageView = Backbone.View.extend({
   hovered: false,
   hoverDelay: 350,
   // Holds the previous hover state for prodOverPage state machine
-  previousHoverState: {prodId: null, srcPgId: null, dstPgId: null},
+  previousPage: {id: 0},
   events: {
     'click' : 'setActive'
   },
@@ -59,29 +59,28 @@ PageView = Backbone.View.extend({
       items: '.product',
       tolerance: 'pointer',
       revert: true,
+      start: function(evt, ui) {
+        // On start dragging, initialize the state to the current page
+        _.extend(self.previousPage, {id: self.model.id});
+      },
       over: function(evt, ui) {
         self.hovered = true;
         setTimeout(function() {
           if(self.hovered) {
-            // Remove the other element 
-            self.setActive();
 
             // Trigger product-hover-page transition event on state change
-            var srcPg = ui.sender.data('model');
-            var dstPg = self.model;
-            var prod = ui.item.data('model');
-            var prevHs = self.previousHoverState;
-            if(prevHs.prodId != prod.id || prevHs.srcPgId != srcPg.id || prevHs.dstPgId != dstPg.id) {
-              console.log('prev state: ' + JSON.stringify(self.previousHoverState));
-
-              // if no previous state do nothing (do not trigger)
-              // if(srcPg == dstPg) && prev.srcPg
-
-              // Overwrite previous hover state
-              _.extend(self.previousHoverState, {prodId: prod.id, srcPgId: srcPg.id, dstPgId: dstPg.id});
+            var currentPg = self.model;
+            if(self.previousPage.id !== currentPg.id) {
               // Trigger the product hover change and send the relevant jQuery objects.
-              eventBus.trigger('prodHoverTransition', ui.sender, self.$el);
-              console.log('new state: ' + JSON.stringify(self.previousHoverState));
+              var $startPg = self.$el.siblings('#page-' + self.previousPage.id);
+              var $endPg = self.$el;
+              eventBus.trigger('prodHoverPageTransition', $startPg, $endPg);
+
+              // Set the current page as active
+              self.setActive();
+
+              // Overwrite previous hover state to current page
+              _.extend(self.previousPage, {id: currentPg.id});
             }
           }
         }, self.hoverDelay);
@@ -130,7 +129,6 @@ PageView = Backbone.View.extend({
     }
   },
   updateProducts: function() {
-    console.log('Update products of page: ' + this.model.id);
     // We check the prods that exist on the current page and update it (reset).
     var prodsTmp = [];
     this.$el.find('.product').each(function(ix) {
@@ -152,7 +150,7 @@ PageListView = Backbone.View.extend({
 
     // TODO: Fix this rendering/creating to prevent multiple event registering
     eventBus.off('toolbarSpaceClicked').on('toolbarSpaceClicked', this.addEmptyProd, this);
-    eventBus.off('prodHoverTransition').on('prodHoverTransition', this.onProdHoverTransition, this);
+    eventBus.off('prodHoverPageTransition').on('prodHoverPageTransition', this.onProdHoverPageTransition, this);
 
     // Listeners
     this.collection.on('add', this.addPage, this);
@@ -217,26 +215,37 @@ PageListView = Backbone.View.extend({
       this.showHideBullets();
     }
   },
-  onProdHoverTransition: function($srcPg, $dstPg) {
-    var srcPg = $srcPg.data('model');
-    var dstPg = $dstPg.data('model');
-    if(srcPg.id < dstPg.id) {
-      // Need to take the first from the dst page and append it to the source page
+  onProdHoverPageTransition: function($startPg, $endPg) {
+    var startPg = $startPg.data('model');
+    var endPg = $endPg.data('model');
 
-      // Need to filter in this way to get the first elem since jQuery ':visible'
-      // visibility: hidden or opacity: 0 are considered visible, since they still consume space in the layout.
-      var $dstFirst = $dstPg.find('.product').filter(function() { return $(this).css('visibility') !== 'hidden' }).eq(0);
-      $srcPg.find('[class^="prod-container-"]').append($dstFirst);
-    } else if(srcPg.id > dstPg.id) {
-      // Need to take the last from the dst page and prepend it to the src page'
-      var $dstLast = $dstPg.find('.product:last-child');
-      $srcPg.find('[class^="prod-container-"]').prepend($dstLast);
-    } else {
-      // if equal.. do nothing for now. Need to understand comming back.
-      // Doing nothing... same src page and dst page.
-      // If equal and already full, then push products forward or backward
-      // if equal and space left, do nothing.
+    var shift = startPg.id < endPg.id ? 'up' : 'down';
+    //console.log('Shift ' + shift + ' from pg ' + startPg.id + ' to pg ' + endPg.id);
+
+    if(shift === 'up') {
+      // We need to shift up the first element of every in-range page
+      for(var i=parseInt(startPg.id); i<endPg.id; i++) {
+        //console.log('Getting the first prod from pg ' + (i+1) + ' and appending it to pg ' + i);
+        var $srcPg = this.$('#page-' + (i+1));
+        var $dstPg = this.$('#page-' + i);
+
+        var $fistProd = this.getVisibleProducts($srcPg).first();
+        $dstPg.find('[class^="prod-container-"]').append($fistProd);
+      }
+    } else if(shift === 'down') {
+      // We need to shift down the last element of every in-range page
+      for(var i=parseInt(startPg.id); i>endPg.id; i--) {
+        //console.log('Getting the last prod from pg ' + (i-1) + ' and prepending it to pg ' + i);
+        var $srcPg = this.$('#page-' + (i-1));
+        var $dstPg = this.$('#page-' + i);
+
+        var $lastProd = this.getVisibleProducts($srcPg).last();
+        $dstPg.find('[class^="prod-container-"]').prepend($lastProd);
+      }
     }
+  },
+  getVisibleProducts: function($pg) {
+    return $pg.find('.product').filter(function() { return $(this).css('visibility') !== 'hidden' });
   },
   onProductDropped: function(prod, page) {
     //console.log('Prod "' + prod.id + '" dropped on page ' + page.id);
