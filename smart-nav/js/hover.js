@@ -36,13 +36,9 @@ PageView = Backbone.View.extend({
     'click' : 'setActive'
   },
   initialize: function() {
-
     // Getting the layout
-    var layout = this.model.get('layout');
-    var layoutTmpl = $('#' + layout.id).clone();
-    // Setting the layout
-    this.$el.html(layoutTmpl.html());
-    this.$prodContainer = this.$('.prod-container-' + layout.id);
+    this.layout = this.model.get('layout');
+    this.layoutTmpl = $('#' + this.layout.id).clone();
 
     // Model events
     this.model.on('change:active', this.onActiveChange, this);
@@ -108,7 +104,10 @@ PageView = Backbone.View.extend({
         self.remove();
       });
     } else {
-      this.$prodContainer.html('');
+      // Reset the layout
+      this.$el.html(this.layoutTmpl.html());
+      this.$prodContainer = this.$('.prod-container-' + this.layout.id);
+      // Fill it with products
       this.model.products.each(this.addProduct, this);
     }
 

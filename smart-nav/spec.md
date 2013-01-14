@@ -6,7 +6,3 @@
 ## Pending
 
   * Animate leaving elem when shifting products between pages.
-
-## Known issues
-
-  * prodHover new page - when only one product on new page... it breaks
