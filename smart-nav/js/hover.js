@@ -356,11 +356,7 @@ BulletView = Backbone.View.extend({
     this.page.set('active', true);
   },
   onActiveChange: function() {
-    if(this.page.get('active')) {
-      this.$el.addClass('selected');
-    } else {
-      this.$el.removeClass('selected');
-    }
+    this.$el.toggleClass('selected', this.page.get('active'));
   }
 });
 LayoutDisplayView = Backbone.View.extend({
