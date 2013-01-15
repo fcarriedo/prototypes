@@ -376,7 +376,7 @@ LayoutDisplayView = Backbone.View.extend({
 
     var pageList = new PageList();
     var prodsArray = this.collection.toArray();
-    for(pgIx in _.range(totalPages)) {
+    for(var pgIx=0; pgIx<totalPages; pgIx++) {
       var initProdIx = pgIx*prodsPerPage;
       var prods = prodsArray.slice(initProdIx, initProdIx+prodsPerPage);
 
